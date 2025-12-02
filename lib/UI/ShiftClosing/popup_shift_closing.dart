@@ -6,6 +6,11 @@ import 'package:posramanastab/Reusable/color.dart';
 import 'package:posramanastab/Reusable/space.dart';
 import 'package:posramanastab/Reusable/text_styles.dart';
 import 'package:posramanastab/UI/ShiftClosing/shift_closing_helper.dart';
+import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
+import 'package:image/image.dart' as img;
+import 'package:flutter/foundation.dart';
+import 'package:flutter_esc_pos_network/flutter_esc_pos_network.dart';
 
 class ThermalShiftClosingDialog extends StatefulWidget {
   final GetShiftClosingModel getShiftClosingModel;
@@ -33,14 +38,297 @@ class ThermalShiftClosingDialog extends StatefulWidget {
 
 class _ThermalShiftClosingDialogState extends State<ThermalShiftClosingDialog> {
   final GlobalKey shiftKey = GlobalKey();
+  List<BluetoothInfo> _devices = [];
+  bool _isScanning = false;
+
+  final TextEditingController ipLanController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
+    // ipLanController.text = "192.168.1.123";
     super.initState();
-    // if (kIsWeb) {
-    //   // Mock service for web
-    // } else if (Platform.isAndroid) {
-    //   _checkIfSunmiDevice();
-    // }
+  }
+
+  Future<void> _scanBluetoothDevices() async {
+    if (_isScanning) return;
+
+    setState(() {
+      _isScanning = true;
+      _devices.clear();
+    });
+
+    try {
+      final bool result = await PrintBluetoothThermal.bluetoothEnabled;
+      if (!result) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Bluetooth is not enabled"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isScanning = false);
+        return;
+      }
+
+      // Get paired Bluetooth devices
+      final List<BluetoothInfo> bluetooths =
+          await PrintBluetoothThermal.pairedBluetooths;
+      setState(() {
+        _devices = bluetooths;
+        _isScanning = false;
+      });
+    } catch (e) {
+      debugPrint("Error scanning Bluetooth devices: $e");
+      setState(() => _isScanning = false);
+    }
+  }
+
+  Future<void> _selectBluetoothPrinter(BuildContext context) async {
+    await _scanBluetoothDevices();
+
+    if (_devices.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "No paired Bluetooth printers found. Please pair your printer first.",
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                "Select Bluetooth Printer",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _devices.length,
+                itemBuilder: (_, index) {
+                  final printer = _devices[index];
+                  return ListTile(
+                    leading: const Icon(Icons.print),
+                    title: Text(
+                      printer.name,
+                    ), // Changed from printer.name ?? "Unknown"
+                    subtitle: Text(
+                      printer.macAdress,
+                    ), // Changed from printer.address ?? ""
+                    onTap: () {
+                      Navigator.pop(context);
+                      _startKOTPrintingBluetoothOnly(context, printer);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// BT KOT Print
+  Future<void> _startKOTPrintingBluetoothOnly(
+    BuildContext context,
+    BluetoothInfo printer,
+  ) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          backgroundColor: Colors.transparent,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(color: appPrimaryColor),
+              SizedBox(height: 16),
+              Text(
+                "Printing to Bluetooth printer...",
+                style: TextStyle(color: whiteColor),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      await WidgetsBinding.instance.endOfFrame;
+
+      Uint8List? imageBytes = await captureMonochromeShiftReport(shiftKey);
+
+      if (imageBytes != null) {
+        final bool connectionResult = await PrintBluetoothThermal.connect(
+          macPrinterAddress: printer.macAdress,
+        );
+
+        if (!connectionResult) {
+          throw Exception("Failed to connect to printer");
+        }
+
+        final profile = await CapabilityProfile.load();
+        final generator = Generator(PaperSize.mm58, profile);
+
+        final decodedImage = img.decodeImage(imageBytes);
+        if (decodedImage != null) {
+          // Updated API for image package v4.x
+          final resizedImage = img.copyResize(
+            decodedImage,
+            width: 384,
+            maintainAspect: true,
+          );
+
+          List<int> bytes = [];
+          bytes += generator.reset();
+
+          // For image v4.x, the imageRaster method signature may be different
+          // Check the documentation, but this should work:
+          bytes += generator.imageRaster(resizedImage);
+
+          bytes += generator.feed(2);
+          bytes += generator.cut();
+
+          final bool printResult = await PrintBluetoothThermal.writeBytes(
+            bytes,
+          );
+          await PrintBluetoothThermal.disconnect;
+
+          Navigator.of(context).pop();
+
+          if (printResult) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("KOT printed to Bluetooth printer!"),
+                backgroundColor: greenColor,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Failed to send data to printer"),
+                backgroundColor: redColor,
+              ),
+            );
+          }
+        }
+      } else {
+        Navigator.of(context).pop();
+        throw Exception("Failed to capture KOT receipt image");
+      }
+    } catch (e) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("KOT Print failed: $e"),
+          backgroundColor: redColor,
+        ),
+      );
+    }
+  }
+
+  ///LAN Printer
+  Future<void> _startKOTPrintingThermalOnly(
+    BuildContext context,
+    String printerIp,
+  ) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          backgroundColor: Colors.transparent,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(color: appPrimaryColor),
+              SizedBox(height: 16),
+              Text(
+                "Printing to thermal printer...",
+                style: TextStyle(color: whiteColor),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      await WidgetsBinding.instance.endOfFrame;
+
+      Uint8List? imageBytes = await captureMonochromeShiftReport(shiftKey);
+
+      if (imageBytes != null) {
+        final printer = PrinterNetworkManager(printerIp);
+        final result = await printer.connect();
+
+        if (result == PosPrintResult.success) {
+          final profile = await CapabilityProfile.load();
+          final generator = Generator(PaperSize.mm58, profile);
+
+          final decodedImage = img.decodeImage(imageBytes);
+          if (decodedImage != null) {
+            final resizedImage = img.copyResize(
+              decodedImage,
+              width: 384, // 58mm = ~384 dots at 203 DPI
+              maintainAspect: true,
+            );
+            List<int> bytes = [];
+            bytes += generator.reset();
+            bytes += generator.imageRaster(
+              resizedImage,
+              align: PosAlign.center,
+              highDensityHorizontal: true, // Better quality
+              highDensityVertical: true,
+            );
+            bytes += generator.feed(2);
+            bytes += generator.cut();
+            await printer.printTicket(bytes);
+          }
+
+          await printer.disconnect();
+
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("KOT printed to thermal printer only!"),
+              backgroundColor: greenColor,
+            ),
+          );
+        } else {
+          // ❌ Failed to connect
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to connect to printer ($result)"),
+              backgroundColor: redColor,
+            ),
+          );
+        }
+      } else {
+        Navigator.of(context).pop();
+        throw Exception("Failed to capture KOT receipt image");
+      }
+    } catch (e) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("KOT Print failed: $e"),
+          backgroundColor: redColor,
+        ),
+      );
+    }
   }
 
   @override
@@ -60,8 +348,10 @@ class _ThermalShiftClosingDialogState extends State<ThermalShiftClosingDialog> {
     String fromDate = parsedDate != null
         ? DateFormat('dd/MM/yyyy').format(parsedDate)
         : "";
-
     String phone = widget.getStockMaintanencesModel.data?.contactNumber ?? '';
+    ipLanController.text =
+        widget.getShiftClosingModel.data?.summary?.ipAddress.toString() ?? "";
+    debugPrint("ipLan:${ipLanController.text}");
     String expUPI =
         widget
             .getShiftClosingModel
@@ -144,8 +434,8 @@ class _ThermalShiftClosingDialogState extends State<ThermalShiftClosingDialog> {
                   padding: EdgeInsets.only(bottom: size.height * 0.2),
                   child: SingleChildScrollView(
                     child: Container(
-                      width: size.width > 650
-                          ? size.width * 0.4
+                      width: size.width >= 600
+                          ? size.width * 0.55
                           : size.width * 0.95,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -224,14 +514,13 @@ class _ThermalShiftClosingDialogState extends State<ThermalShiftClosingDialog> {
                         children: [
                           ElevatedButton.icon(
                             onPressed: () async {
-                              // WidgetsBinding.instance.addPostFrameCallback((
-                              //   _,
-                              // ) async {
-                              //   await _printBillToSunmi(context);
-                              // });
+                              _startKOTPrintingThermalOnly(
+                                context,
+                                ipLanController.text.trim(),
+                              );
                             },
                             icon: const Icon(Icons.print),
-                            label: const Text("Print"),
+                            label: const Text("Print(Wifi)"),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: greenColor,
                               foregroundColor: whiteColor,
@@ -239,16 +528,28 @@ class _ThermalShiftClosingDialogState extends State<ThermalShiftClosingDialog> {
                           ),
                           horizontalSpace(width: 10),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pop(context);
+                            onPressed: () async {
+                              _selectBluetoothPrinter(context);
                             },
-                            label: const Text("CLOSE"),
+                            icon: const Icon(Icons.print),
+                            label: const Text("Print(BT)"),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: appPrimaryColor,
+                              backgroundColor: greenColor,
                               foregroundColor: whiteColor,
                             ),
                           ),
                         ],
+                      ),
+                      verticalSpace(height: 10),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        label: const Text("CLOSE"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: appPrimaryColor,
+                          foregroundColor: whiteColor,
+                        ),
                       ),
                     ],
                   ),

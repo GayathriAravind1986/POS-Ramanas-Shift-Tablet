@@ -43,6 +43,10 @@ dependencies:
   intl:
   provider: ^6.0.5
   dio: ^5.1.1
+  print_bluetooth_thermal: ^1.0.8
+  esc_pos_utils_plus: ^2.0.1+6
+  flutter_esc_pos_network: ^1.0.3
+  image: ^4.0.17
 
 
 dev_dependencies:

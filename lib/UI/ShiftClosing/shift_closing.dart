@@ -264,115 +264,128 @@ class ShiftViewViewState extends State<ShiftViewView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      saveLoad
-                          ? SpinKitCircle(color: appPrimaryColor, size: 30)
-                          : ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: greenColor,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40,
-                                  vertical: 15,
+                      if (getShiftClosingModel.data?.summary?.saved == false)
+                        saveLoad
+                            ? SpinKitCircle(color: appPrimaryColor, size: 30)
+                            : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: greenColor,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 40,
+                                    vertical: 15,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    saveLoad = true;
+                                  });
+                                  dateController.text =
+                                      "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
+                                  final parsed = DateFormat(
+                                    "dd/MM/yyyy",
+                                  ).parse(dateController.text);
+                                  final backendDate = DateFormat(
+                                    "yyyy-MM-dd",
+                                  ).format(parsed);
+                                  debugPrint("date:$backendDate");
+                                  context.read<ShiftClosingBloc>().add(
+                                    SaveShiftClosing(
+                                      backendDate,
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.paymentMethods
+                                                  ?.expectedUpiAmount ??
+                                              0)
+                                          .toString(),
+                                      upiController.text,
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.paymentMethods
+                                                  ?.expectedCardAmount ??
+                                              0)
+                                          .toString(),
+                                      cardController.text,
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.expectedHdAmount ??
+                                              0)
+                                          .toString(),
+                                      hdController.text,
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.paymentMethods
+                                                  ?.totalcashAmount ??
+                                              0)
+                                          .toString(),
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.paymentMethods
+                                                  ?.cashAmount ??
+                                              0)
+                                          .toString(),
+                                      cashInHandController.text,
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.paymentMethods
+                                                  ?.expectedCashAmount ??
+                                              0)
+                                          .toString(),
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.totalSalesAmount ??
+                                              0)
+                                          .toString(),
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.totalExpensesAmount ??
+                                              0)
+                                          .toString(),
+                                      (getShiftClosingModel
+                                                  .data
+                                                  ?.summary
+                                                  ?.overallexpensesamt ??
+                                              0)
+                                          .toString(),
+                                      cashDifference.toString(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  "SAVE CLOSING",
+                                  style: TextStyle(color: whiteColor),
                                 ),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  saveLoad = true;
-                                });
-                                dateController.text =
-                                    "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
-                                final parsed = DateFormat(
-                                  "dd/MM/yyyy",
-                                ).parse(dateController.text);
-                                final backendDate = DateFormat(
-                                  "yyyy-MM-dd",
-                                ).format(parsed);
-                                debugPrint("date:$backendDate");
-                                context.read<ShiftClosingBloc>().add(
-                                  SaveShiftClosing(
-                                    backendDate,
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.paymentMethods
-                                                ?.expectedUpiAmount ??
-                                            0)
-                                        .toString(),
-                                    upiController.text,
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.paymentMethods
-                                                ?.expectedCardAmount ??
-                                            0)
-                                        .toString(),
-                                    cardController.text,
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.expectedHdAmount ??
-                                            0)
-                                        .toString(),
-                                    hdController.text,
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.paymentMethods
-                                                ?.totalcashAmount ??
-                                            0)
-                                        .toString(),
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.paymentMethods
-                                                ?.cashAmount ??
-                                            0)
-                                        .toString(),
-                                    cashInHandController.text,
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.paymentMethods
-                                                ?.expectedCashAmount ??
-                                            0)
-                                        .toString(),
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.totalSalesAmount ??
-                                            0)
-                                        .toString(),
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.totalExpensesAmount ??
-                                            0)
-                                        .toString(),
-                                    (getShiftClosingModel
-                                                .data
-                                                ?.summary
-                                                ?.overallexpensesamt ??
-                                            0)
-                                        .toString(),
-                                    cashDifference.toString(),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                "SAVE CLOSING",
-                                style: TextStyle(color: whiteColor),
-                              ),
-                            ),
                       horizontalSpace(width: 10),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          showShiftClosingPopup(context);
-                        },
-                        label: const Text("Print"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: appPrimaryColor,
-                          foregroundColor: whiteColor,
+                      if (getShiftClosingModel.data?.summary?.saved == true)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => ThermalShiftClosingDialog(
+                                getShiftClosingModel,
+                                getStockMaintanencesModel,
+                                upi: upiController.text,
+                                card: cardController.text,
+                                hd: hdController.text,
+                                cash: cashInHandController.text,
+                                cashDifference: cashDifference.toString(),
+                              ),
+                            );
+                          },
+                          label: const Text("Print"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: appPrimaryColor,
+                            foregroundColor: whiteColor,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ],

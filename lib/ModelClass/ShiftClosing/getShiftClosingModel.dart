@@ -25,14 +25,8 @@ class GetShiftClosingModel {
   bool? _success;
   Data? _data;
   ErrorResponse? errorResponse;
-  GetShiftClosingModel copyWith({
-    bool? success,
-    Data? data,
-  }) =>
-      GetShiftClosingModel(
-        success: success ?? _success,
-        data: data ?? _data,
-      );
+  GetShiftClosingModel copyWith({bool? success, Data? data}) =>
+      GetShiftClosingModel(success: success ?? _success, data: data ?? _data);
   bool? get success => _success;
   Data? get data => _data;
 
@@ -53,10 +47,7 @@ class GetShiftClosingModel {
 /// summary : {"paymentMethods":{"expectedUpiAmount":300,"upiAmount":100,"expectedCashAmount":460,"cashAmount":665,"expectedCardAmount":100,"cardAmount":100,"totalcashAmount":800},"expectedHdAmount":200,"hdAmount":200,"totalSalesAmount":1400,"totalExpensesAmount":340,"overallexpensesamt":940,"balance":460}
 
 class Data {
-  Data({
-    FiltersUsed? filtersUsed,
-    Summary? summary,
-  }) {
+  Data({FiltersUsed? filtersUsed, Summary? summary}) {
     _filtersUsed = filtersUsed;
     _summary = summary;
   }
@@ -65,19 +56,16 @@ class Data {
     _filtersUsed = json['filtersUsed'] != null
         ? FiltersUsed.fromJson(json['filtersUsed'])
         : null;
-    _summary =
-        json['summary'] != null ? Summary.fromJson(json['summary']) : null;
+    _summary = json['summary'] != null
+        ? Summary.fromJson(json['summary'])
+        : null;
   }
   FiltersUsed? _filtersUsed;
   Summary? _summary;
-  Data copyWith({
-    FiltersUsed? filtersUsed,
-    Summary? summary,
-  }) =>
-      Data(
-        filtersUsed: filtersUsed ?? _filtersUsed,
-        summary: summary ?? _summary,
-      );
+  Data copyWith({FiltersUsed? filtersUsed, Summary? summary}) => Data(
+    filtersUsed: filtersUsed ?? _filtersUsed,
+    summary: summary ?? _summary,
+  );
   FiltersUsed? get filtersUsed => _filtersUsed;
   Summary? get summary => _summary;
 
@@ -93,13 +81,22 @@ class Data {
   }
 }
 
-/// paymentMethods : {"expectedUpiAmount":300,"upiAmount":100,"expectedCashAmount":460,"cashAmount":665,"expectedCardAmount":100,"cardAmount":100,"totalcashAmount":800}
-/// expectedHdAmount : 200
-/// hdAmount : 200
-/// totalSalesAmount : 1400
-/// totalExpensesAmount : 340
-/// overallexpensesamt : 940
-/// balance : 460
+/// paymentMethods : {"expectedUpiAmount":0,"upiAmount":12,"expectedCashAmount":0,"cashAmount":0,"expectedCardAmount":0,"cardAmount":0,"totalcashAmount":0}
+/// expectedHdAmount : 0
+/// hdAmount : 0
+/// totalSalesAmount : 0
+/// totalExpensesAmount : 0
+/// overallexpensesamt : 0
+/// balance : 0
+/// version : 1
+/// saved : true
+/// address : "kl, lk, kj 76"
+/// phone : "897"
+/// gstNumber : "786hjk"
+/// printType : "58MM"
+/// thermalIp : "192.168.1.10"
+/// connectionType : "WIFI"
+/// ipAddress : "192.168.1.5"
 
 class Summary {
   Summary({
@@ -110,6 +107,15 @@ class Summary {
     num? totalExpensesAmount,
     num? overallexpensesamt,
     num? balance,
+    num? version,
+    bool? saved,
+    String? address,
+    String? phone,
+    String? gstNumber,
+    String? printType,
+    String? thermalIp,
+    String? connectionType,
+    String? ipAddress,
   }) {
     _paymentMethods = paymentMethods;
     _expectedHdAmount = expectedHdAmount;
@@ -118,6 +124,15 @@ class Summary {
     _totalExpensesAmount = totalExpensesAmount;
     _overallexpensesamt = overallexpensesamt;
     _balance = balance;
+    _version = version;
+    _saved = saved;
+    _address = address;
+    _phone = phone;
+    _gstNumber = gstNumber;
+    _printType = printType;
+    _thermalIp = thermalIp;
+    _connectionType = connectionType;
+    _ipAddress = ipAddress;
   }
 
   Summary.fromJson(dynamic json) {
@@ -130,6 +145,15 @@ class Summary {
     _totalExpensesAmount = json['totalExpensesAmount'];
     _overallexpensesamt = json['overallexpensesamt'];
     _balance = json['balance'];
+    _version = json['version'];
+    _saved = json['saved'];
+    _address = json['address'];
+    _phone = json['phone'];
+    _gstNumber = json['gstNumber'];
+    _printType = json['printType'];
+    _thermalIp = json['thermalIp'];
+    _connectionType = json['connectionType'];
+    _ipAddress = json['ipAddress'];
   }
   PaymentMethods? _paymentMethods;
   num? _expectedHdAmount;
@@ -138,6 +162,15 @@ class Summary {
   num? _totalExpensesAmount;
   num? _overallexpensesamt;
   num? _balance;
+  num? _version;
+  bool? _saved;
+  String? _address;
+  String? _phone;
+  String? _gstNumber;
+  String? _printType;
+  String? _thermalIp;
+  String? _connectionType;
+  String? _ipAddress;
   Summary copyWith({
     PaymentMethods? paymentMethods,
     num? expectedHdAmount,
@@ -146,16 +179,33 @@ class Summary {
     num? totalExpensesAmount,
     num? overallexpensesamt,
     num? balance,
-  }) =>
-      Summary(
-        paymentMethods: paymentMethods ?? _paymentMethods,
-        expectedHdAmount: expectedHdAmount ?? _expectedHdAmount,
-        hdAmount: hdAmount ?? _hdAmount,
-        totalSalesAmount: totalSalesAmount ?? _totalSalesAmount,
-        totalExpensesAmount: totalExpensesAmount ?? _totalExpensesAmount,
-        overallexpensesamt: overallexpensesamt ?? _overallexpensesamt,
-        balance: balance ?? _balance,
-      );
+    num? version,
+    bool? saved,
+    String? address,
+    String? phone,
+    String? gstNumber,
+    String? printType,
+    String? thermalIp,
+    String? connectionType,
+    String? ipAddress,
+  }) => Summary(
+    paymentMethods: paymentMethods ?? _paymentMethods,
+    expectedHdAmount: expectedHdAmount ?? _expectedHdAmount,
+    hdAmount: hdAmount ?? _hdAmount,
+    totalSalesAmount: totalSalesAmount ?? _totalSalesAmount,
+    totalExpensesAmount: totalExpensesAmount ?? _totalExpensesAmount,
+    overallexpensesamt: overallexpensesamt ?? _overallexpensesamt,
+    balance: balance ?? _balance,
+    version: version ?? _version,
+    saved: saved ?? _saved,
+    address: address ?? _address,
+    phone: phone ?? _phone,
+    gstNumber: gstNumber ?? _gstNumber,
+    printType: printType ?? _printType,
+    thermalIp: thermalIp ?? _thermalIp,
+    connectionType: connectionType ?? _connectionType,
+    ipAddress: ipAddress ?? _ipAddress,
+  );
   PaymentMethods? get paymentMethods => _paymentMethods;
   num? get expectedHdAmount => _expectedHdAmount;
   num? get hdAmount => _hdAmount;
@@ -163,6 +213,15 @@ class Summary {
   num? get totalExpensesAmount => _totalExpensesAmount;
   num? get overallexpensesamt => _overallexpensesamt;
   num? get balance => _balance;
+  num? get version => _version;
+  bool? get saved => _saved;
+  String? get address => _address;
+  String? get phone => _phone;
+  String? get gstNumber => _gstNumber;
+  String? get printType => _printType;
+  String? get thermalIp => _thermalIp;
+  String? get connectionType => _connectionType;
+  String? get ipAddress => _ipAddress;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -175,17 +234,26 @@ class Summary {
     map['totalExpensesAmount'] = _totalExpensesAmount;
     map['overallexpensesamt'] = _overallexpensesamt;
     map['balance'] = _balance;
+    map['version'] = _version;
+    map['saved'] = _saved;
+    map['address'] = _address;
+    map['phone'] = _phone;
+    map['gstNumber'] = _gstNumber;
+    map['printType'] = _printType;
+    map['thermalIp'] = _thermalIp;
+    map['connectionType'] = _connectionType;
+    map['ipAddress'] = _ipAddress;
     return map;
   }
 }
 
-/// expectedUpiAmount : 300
-/// upiAmount : 100
-/// expectedCashAmount : 460
-/// cashAmount : 665
-/// expectedCardAmount : 100
-/// cardAmount : 100
-/// totalcashAmount : 800
+/// expectedUpiAmount : 0
+/// upiAmount : 12
+/// expectedCashAmount : 0
+/// cashAmount : 0
+/// expectedCardAmount : 0
+/// cardAmount : 0
+/// totalcashAmount : 0
 
 class PaymentMethods {
   PaymentMethods({
@@ -230,16 +298,15 @@ class PaymentMethods {
     num? expectedCardAmount,
     num? cardAmount,
     num? totalcashAmount,
-  }) =>
-      PaymentMethods(
-        expectedUpiAmount: expectedUpiAmount ?? _expectedUpiAmount,
-        upiAmount: upiAmount ?? _upiAmount,
-        expectedCashAmount: expectedCashAmount ?? _expectedCashAmount,
-        cashAmount: cashAmount ?? _cashAmount,
-        expectedCardAmount: expectedCardAmount ?? _expectedCardAmount,
-        cardAmount: cardAmount ?? _cardAmount,
-        totalcashAmount: totalcashAmount ?? _totalcashAmount,
-      );
+  }) => PaymentMethods(
+    expectedUpiAmount: expectedUpiAmount ?? _expectedUpiAmount,
+    upiAmount: upiAmount ?? _upiAmount,
+    expectedCashAmount: expectedCashAmount ?? _expectedCashAmount,
+    cashAmount: cashAmount ?? _cashAmount,
+    expectedCardAmount: expectedCardAmount ?? _expectedCardAmount,
+    cardAmount: cardAmount ?? _cardAmount,
+    totalcashAmount: totalcashAmount ?? _totalcashAmount,
+  );
   num? get expectedUpiAmount => _expectedUpiAmount;
   num? get upiAmount => _upiAmount;
   num? get expectedCashAmount => _expectedCashAmount;
@@ -261,16 +328,12 @@ class PaymentMethods {
   }
 }
 
-/// date : "2025-11-27"
+/// date : "2025-12-02"
 /// locationId : "6890d1700eb176a5bfc48b2a"
 /// OperatorId : "692529b1cce96462c4696340"
 
 class FiltersUsed {
-  FiltersUsed({
-    String? date,
-    String? locationId,
-    String? operatorId,
-  }) {
+  FiltersUsed({String? date, String? locationId, String? operatorId}) {
     _date = date;
     _locationId = locationId;
     _operatorId = operatorId;
@@ -288,12 +351,11 @@ class FiltersUsed {
     String? date,
     String? locationId,
     String? operatorId,
-  }) =>
-      FiltersUsed(
-        date: date ?? _date,
-        locationId: locationId ?? _locationId,
-        operatorId: operatorId ?? _operatorId,
-      );
+  }) => FiltersUsed(
+    date: date ?? _date,
+    locationId: locationId ?? _locationId,
+    operatorId: operatorId ?? _operatorId,
+  );
   String? get date => _date;
   String? get locationId => _locationId;
   String? get operatorId => _operatorId;
